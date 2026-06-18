@@ -1,0 +1,21 @@
+{
+  "name": "Financial Signals MCP",
+  "description": "Derived financial intelligence for agents: insider patterns, earnings surprises, institutional moves, financial ratios with a proprietary value score, macro signals, and anomaly detection. A free-tier alternative to FactSet/Morningstar/Capital IQ. Part of the FoundryNet Data Network.",
+  "url": "https://github.com/FoundryNet/financial-signals-mcp",
+  "capabilities": [
+    "financial_data", "stock_screening", "insider_trading", "earnings_analysis",
+    "institutional_ownership", "financial_ratios", "market_intelligence", "alternative_data"
+  ],
+  "network": "FoundryNet Data Network",
+  "see_also": {
+    "gov-contracts-mcp": "https://gov-contracts-mcp-production.up.railway.app/mcp",
+    "brand-intel-mcp": "https://brand-intel-mcp-production.up.railway.app/mcp",
+    "patent-intel-mcp": "https://patent-intel-mcp-production.up.railway.app/mcp"
+  },
+  "mint_protocol": "https://mint-mcp-production.up.railway.app/mcp",
+  "protocols": {
+    "mcp": { "endpoint": "https://financial-signals-mcp-production.up.railway.app/mcp", "transport": "streamable-http", "tools_count": 9 },
+    "x402": { "supported": true, "currency": "USDC", "network": "solana" }
+  },
+  "contact": "hello@foundrynet.io"
+}
