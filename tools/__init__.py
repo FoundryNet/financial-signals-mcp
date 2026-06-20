@@ -18,10 +18,11 @@ from . import sector as sector_tool
 from . import macro as macro_tool
 from . import company as company_tool
 from . import anomaly as anomaly_tool
+from . import daily_brief as daily_brief_tool
 from . import mint as mint_tool
 
 
 def register_all(mcp) -> None:
     for m in (insider_tool, earnings_tool, institutional_tool, screen_tool, sector_tool,
-              macro_tool, company_tool, anomaly_tool, mint_tool):
+              macro_tool, company_tool, anomaly_tool, daily_brief_tool, mint_tool):
         m.register(mcp)

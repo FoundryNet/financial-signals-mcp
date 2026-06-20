@@ -5,11 +5,14 @@ the derived signal tables.
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 import statistics
 from datetime import datetime, timedelta, timezone
 
 import config
+import daily_curator
+import mint_integration
 import payment_gate
 import supa
 
@@ -210,8 +213,29 @@ async def do_anomaly(min_severity, *, agent_key, payment_tx=None, api_key=None):
 
     order = {"high": 3, "medium": 2, "low": 1}
     anomalies.sort(key=lambda a: order.get(a["severity"], 0), reverse=True)
-    return {"since": since, "count": len(anomalies), "anomalies": anomalies[:100],
-            "billing": _billing(dec)}
+    result = {"since": since, "count": len(anomalies), "anomalies": anomalies[:100],
+              "billing": _billing(dec)}
+    # Provenance attestation (additive; fail-open; off the event loop).
+    result["provenance"] = await asyncio.to_thread(
+        mint_integration.attest_data, result, "analysis", "anomaly_alert query result")
+    return result
+
+
+# ── daily_brief (premium, curated) ────────────────────────────────────────────
+async def do_daily_brief(date, *, agent_key, payment_tx=None, api_key=None):
+    day = (date or datetime.now(timezone.utc).strftime("%Y-%m-%d")).strip()
+    dec = await _gate("daily_brief", {"date": day}, config.PRICE_DAILY_BRIEF,
+                      agent_key, payment_tx, api_key)
+    if dec["gate"] == "blocked":
+        return dec["body"]
+    brief = await daily_curator.get_brief(day)
+    if not brief:
+        return {"error": "not_available",
+                "detail": f"No brief for {day} (not yet generated, or expired at midnight UTC). "
+                          f"Briefs are curated daily at {config.BRIEF_HOUR_UTC:02d}:00 UTC.",
+                "billing": _billing(dec)}
+    await daily_curator.bump_purchase(day)
+    return {**brief, "billing": _billing(dec)}
 
 
 def _sev_name(n):
@@ -221,7 +245,7 @@ def _sev_name(n):
 # ── mint_info (FREE) ──────────────────────────────────────────────────────────
 def mint_info() -> dict:
     return {
-        "network": "FoundryNet Data Network",
+        "network": "FoundryNet Data Network", **mint_integration.network_feed_block(),
         "message": "Attest your agent's financial analysis with MINT Protocol for verifiable proof of work.",
         "positioning": ("A free-tier alternative to enterprise financial data (FactSet, "
                         "Morningstar, S&P Capital IQ) — financial intelligence for agents "
@@ -231,3 +255,68 @@ def mint_info() -> dict:
                                     "mint_rate", "mint_recommend", "mint_discover"]},
         "see_also": config.SISTER_SERVERS,
     }
+
+
+# ── Soft upsell: surface the daily_brief on every paid, non-brief response ─────
+# Appends one non-blocking `available_intelligence` field to successful paid tool
+# responses so the calling agent learns a single curated brief can replace many
+# individual paid queries. Skips error and 402/payment_required bodies, and never
+# touches daily_brief itself (no self-upsell). Brief status is cached 5 min, so
+# this adds no per-call DB latency. Added 2026-06-20 (seller_agent v2 upsell hook).
+import time as _upsell_time
+
+_brief_upsell_cache = {"day": None, "ts": 0.0, "available": False, "count": 0}
+
+
+async def _brief_status_cached() -> tuple[bool, int]:
+    day = _upsell_time.strftime("%Y-%m-%d", _upsell_time.gmtime())
+    now = _upsell_time.time()
+    c = _brief_upsell_cache
+    if c["day"] == day and (now - c["ts"]) < 300:
+        return c["available"], c["count"]
+    avail, count = False, 0
+    try:
+        brief = await daily_curator.get_brief(day)
+        if brief:
+            avail, count = True, int(brief.get("signal_count") or 0)
+    except Exception:  # noqa: BLE001
+        return c["available"], c["count"]
+    c.update(day=day, ts=now, available=avail, count=count)
+    return avail, count
+
+
+async def _available_intelligence() -> dict:
+    avail, count = await _brief_status_cached()
+    return {"daily_brief": {
+        "available": avail,
+        "signal_count": count,
+        "price_usd": config.PRICE_DAILY_BRIEF,
+        "tool": "daily_brief",
+        "note": "Curated daily intelligence — more efficient than individual queries",
+    }}
+
+
+def _make_upsell(_fn):
+    import functools
+
+    @functools.wraps(_fn)
+    async def _wrapped(*a, **k):
+        result = await _fn(*a, **k)
+        if isinstance(result, dict) and "error" not in result and "payment_required" not in result:
+            try:
+                result["available_intelligence"] = await _available_intelligence()
+            except Exception:  # noqa: BLE001
+                pass
+            try:
+                import asyncio as _aio, mint_integration as _mint
+                result["foundrynet_network"] = await _aio.to_thread(_mint.network_heartbeat)
+            except Exception:  # noqa: BLE001
+                pass
+        return result
+
+    return _wrapped
+
+
+for _upsell_fn in ("do_insider", "do_earnings", "do_institutional", "do_screen", "do_sector", "do_company", "do_anomaly",):
+    if _upsell_fn in globals():
+        globals()[_upsell_fn] = _make_upsell(globals()[_upsell_fn])

@@ -25,6 +25,7 @@ from starlette.responses import JSONResponse
 
 import config
 import core
+import daily_curator
 import financial_signals_aggregator as agg
 import identity
 import payment_gate
@@ -56,7 +57,8 @@ async def health(request: Request) -> JSONResponse:
         "status": "ok", "service": "financial-signals-mcp", "transport": "streamable-http",
         "network": "FoundryNet Data Network",
         "tools": ["insider_activity", "earnings_check", "institutional_moves", "screen_stocks",
-                  "sector_snapshot", "macro_dashboard", "company_profile", "anomaly_alert", "mint_info"],
+                  "sector_snapshot", "macro_dashboard", "company_profile", "anomaly_alert",
+                  "daily_brief", "mint_info"],
         "dataset": "supabase:financial_signals" if supa.configured() else "unconfigured",
         "fred_key": "set" if config.FRED_API_KEY else "unset",
         "x402_enabled": config.X402_ENABLED,
@@ -187,12 +189,21 @@ _KEYWORDS = ["financial data", "stock screening", "insider trading", "earnings a
              "institutional ownership", "financial ratios", "market intelligence", "alternative data"]
 
 _AGENT_CARD = {
-    "name": "Financial Signals MCP", "description": _DESC,
-    "url": "https://github.com/FoundryNet/financial-signals-mcp",
-    "capabilities": ["financial_data", "stock_screening", "insider_trading", "earnings_analysis",
-                     "institutional_ownership", "financial_ratios", "market_intelligence"],
+    "name": "Financial Signals MCP",
+    "description": ("Analyze S&P 500 stocks with derived signals — insider trading, earnings "
+                    "surprises, institutional ownership, financial ratios, and macro — distilled "
+                    "from SEC filings and market data."),
+    "url": "https://financial-signals-mcp-production.up.railway.app/mcp",
+    "version": "1.0.0",
+    "capabilities": {"tools": ["insider_activity", "earnings_check", "institutional_moves",
+                               "screen_stocks", "sector_snapshot", "macro_dashboard",
+                               "company_profile", "anomaly_alert", "daily_brief", "mint_info"]},
+    "provider": {"name": "FoundryNet", "url": "https://foundrynet.io"},
     "network": "FoundryNet Data Network",
-    "protocols": {"mcp": {"endpoint": config.PUBLIC_MCP_URL, "transport": "streamable-http", "tools_count": 9},
+    "attestation": {"protocol": "MINT Protocol",
+                    "endpoint": "https://mint-mcp-production.up.railway.app/mcp",
+                    "verified_outputs": True, "live_feed": "https://mint.foundrynet.io/feed", "feed_api": "https://mint-mcp-production.up.railway.app/v1/feed"},
+    "protocols": {"mcp": {"endpoint": config.PUBLIC_MCP_URL, "transport": "streamable-http", "tools_count": 10},
                   "x402": {"supported": True, "currency": "USDC", "network": "solana"}},
     "see_also": config.SISTER_SERVERS, "mint_protocol": config.MINT_MCP_URL,
     "contact": "hello@foundrynet.io",
@@ -257,6 +268,31 @@ async def _agg_loop():
             await asyncio.sleep(3600)
 
 
+_FREE_TOOL_NAMES = {"mint_info", "macro_dashboard", "cve_detail", "detail",
+                    "domain_age", "convert", "rates", "market_overview", "price",
+                    "quote", "batch_quote", "sector_performance"}
+
+
+@mcp.custom_route("/.well-known/mcp.json", methods=["GET"])
+async def wellknown_mcp_json(request: Request) -> JSONResponse:
+    """Machine-discovery card (emerging standard) for AI clients/crawlers."""
+    live = await _live_tools()
+    names = [t["name"] for t in live]
+    return JSONResponse({
+        "name": _AGENT_CARD["name"],
+        "description": _AGENT_CARD["description"],
+        "url": config.PUBLIC_MCP_URL,
+        "transport": ["streamable-http"],
+        "tools": names,
+        "pricing": {"model": "per-query", "free_tier": True,
+                    "paid_tools": [n for n in names if n not in _FREE_TOOL_NAMES]},
+        "attestation": {"enabled": True, "protocol": "MINT Protocol",
+                        "feed": "https://mint.foundrynet.io/feed"},
+        "network": {"name": "FoundryNet Data Network", "servers": 17,
+                    "homepage": "https://foundrynet.io"},
+    }, headers={"Cache-Control": "public, max-age=300"})
+
+
 def build_dual_app():
     main_app = mcp.http_app(transport="http", path="/mcp")
     sse_app = mcp.http_app(transport="sse", path="/sse")
@@ -270,12 +306,14 @@ def build_dual_app():
         async with main_life(app):
             async with sse_life(app):
                 task = asyncio.create_task(_agg_loop())
+                brief_task = asyncio.create_task(daily_curator.curator_loop())
                 try:
                     yield
                 finally:
-                    task.cancel()
-                    with contextlib.suppress(Exception):
-                        await task
+                    for t in (task, brief_task):
+                        t.cancel()
+                        with contextlib.suppress(Exception):
+                            await t
     main_app.router.lifespan_context = _dual_lifespan
     return main_app
 

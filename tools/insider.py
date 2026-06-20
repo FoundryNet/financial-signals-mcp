@@ -13,9 +13,10 @@ def register(mcp) -> None:
         agent_id: Optional[str] = None,
         payment_tx: Optional[str] = None,
     ) -> dict:
-        """Insider transactions with PATTERN analysis — not raw filings. Surfaces
-        derived signals like cluster_sell ("3 insiders sold within 5 days, 12 days
-        before earnings"), large_buy, ceo_buy, and pre_earnings. The premium tool
+        """Analyze insider trading activity for an S&P 500 stock — derived pattern
+        signals from SEC EDGAR Form 4 filings, not raw filings. Surfaces market
+        intelligence like cluster_sell ("3 insiders sold within 5 days, 12 days
+        before earnings"), large_buy, ceo_buy, and pre_earnings — the premium tool
         for "show me unusual insider selling before earnings".
 
         PAID: $0.01 USDC per query after a daily free allowance (25/day). On a 402,

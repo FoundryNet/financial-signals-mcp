@@ -17,11 +17,12 @@ def register(mcp) -> None:
         agent_id: Optional[str] = None,
         payment_tx: Optional[str] = None,
     ) -> dict:
-        """Screen stocks by fundamentals — full ratio profile with sector
-        comparison, ranked by the proprietary composite_value_score (a blend of
-        valuation-vs-sector, growth, margin quality, insider sentiment,
-        institutional momentum, and earnings consistency). Sorting by value score
-        is YOUR proprietary ranking.
+        """Screen S&P 500 stocks by financial ratios — full ratio profile with
+        sector comparison, ranked by the proprietary composite_value_score (a blend
+        of valuation-vs-sector, growth, margin quality, insider sentiment,
+        institutional ownership momentum, and earnings consistency), derived from
+        SEC filings and market data. Sorting by value score is YOUR proprietary
+        stock-analysis ranking.
 
         PAID: $0.01 USDC per query after the daily free allowance (25/day). On a
         402, pay the returned Solana memo and re-call with the SAME args plus

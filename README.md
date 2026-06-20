@@ -13,8 +13,21 @@ a decision. Raw data is commodity; **interpreted signals are premium**.
 > Morningstar, S&P Capital IQ) — financial intelligence for agents without
 > enterprise subscriptions.
 
-Live MCP endpoint (Streamable HTTP):
-`https://financial-signals-mcp-production.up.railway.app/mcp`
+## Connect
+
+- **MCP endpoint** (Streamable HTTP): `https://financial-signals-mcp-production.up.railway.app/mcp`
+- **Registry**: `io.github.FoundryNet/financial-signals-mcp`
+- **Agent card**: `https://financial-signals-mcp-production.up.railway.app/.well-known/agent-card.json`
+
+### Claude Desktop / Cursor / Claude Code
+
+```
+claude mcp add --transport http financial-signals https://financial-signals-mcp-production.up.railway.app/mcp
+```
+
+```json
+{ "mcpServers": { "financial-signals": { "url": "https://financial-signals-mcp-production.up.railway.app/mcp" } } }
+```
 
 ## Tools
 
@@ -53,12 +66,13 @@ EDGAR** (supplementary). Signal-typing + the composite score are computed at ing
 are not reliably free, so they're null/`none` where unavailable (`roic` uses ROA
 as a capital-efficiency proxy). Coverage grows as the daily universe is processed.
 
-## Connect
+## More
 
-Smithery: `@foundrynet/financial-signals` · MCP registry: `io.github.FoundryNet/financial-signals-mcp`
-
-```json
-{ "mcpServers": { "financial-signals": { "url": "https://financial-signals-mcp-production.up.railway.app/mcp" } } }
-```
+part of the **FoundryNet Data Network**.
 
 Built by [FoundryNet](https://foundrynet.io) · hello@foundrynet.io
+
+## Live network activity
+
+**Live feed:** [mint.foundrynet.io/feed](https://mint.foundrynet.io/feed)  
+Real-time verified work across 13 servers and autonomous agents, anchored on Solana via [MINT Protocol](https://mint.foundrynet.io).

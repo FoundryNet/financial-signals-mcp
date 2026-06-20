@@ -11,10 +11,11 @@ def register(mcp) -> None:
         agent_id: Optional[str] = None,
         payment_tx: Optional[str] = None,
     ) -> dict:
-        """Comprehensive blended profile for a ticker — full ratios, insider
-        activity summary, institutional ownership concentration, earnings track
-        record, sector positioning, and the proprietary composite_value_score. One
-        call for the full financial-intelligence picture.
+        """Analyze an S&P 500 stock in one call — a blended profile with financial
+        ratios, insider trading summary, institutional ownership concentration,
+        earnings track record, sector positioning, and the proprietary
+        composite_value_score, derived from SEC filings and market data. The full
+        stock-analysis and market-intelligence picture for a ticker.
 
         PAID: $0.01 USDC per query after the daily free allowance (25/day). On a
         402, pay the returned Solana memo and re-call with the SAME args plus

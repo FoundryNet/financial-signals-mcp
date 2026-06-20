@@ -11,9 +11,10 @@ def register(mcp) -> None:
         agent_id: Optional[str] = None,
         payment_tx: Optional[str] = None,
     ) -> dict:
-        """Unusual patterns detected across all monitored companies in the last few
-        days — insider clusters, earnings divergences, institutional exits, and
-        ratio extremes — ranked by severity. The premium market-intelligence sweep.
+        """Screen all monitored S&P 500 companies for unusual patterns in the last
+        few days — insider trading clusters, earnings divergences, institutional
+        ownership exits, and financial-ratio extremes — ranked by severity, derived
+        from SEC filings and market data. The premium market-intelligence sweep.
 
         PAID: $0.02 USDC per query after the daily free allowance (25/day). On a
         402, pay the returned Solana memo and re-call with the SAME args plus

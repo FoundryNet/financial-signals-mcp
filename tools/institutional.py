@@ -14,9 +14,10 @@ def register(mcp) -> None:
         agent_id: Optional[str] = None,
         payment_tx: Optional[str] = None,
     ) -> dict:
-        """Significant institutional (13F) position changes with context — new
-        positions, exits, and big increases/decreases (e.g. "Bridgewater initiated
-        $400M position"). Institutional ownership flow for any ticker or fund.
+        """Check significant institutional ownership moves from SEC 13F filings —
+        new positions, exits, and large increases/decreases with context (e.g.
+        "Bridgewater initiated $400M position"). Institutional ownership flow and
+        market intelligence for any ticker or fund.
 
         PAID: $0.01 USDC per query after the daily free allowance (25/day). On a
         402, pay the returned Solana memo and re-call with the SAME args plus
