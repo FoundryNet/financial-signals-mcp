@@ -1,12 +1,36 @@
-name: "@foundrynet/financial-signals"
-displayName: "Financial Signals MCP"
+name: "@foundrynet/financial-signals-mcp"
+displayName: "FoundryNet Financial Intelligence"
 description: >-
-  Derived financial intelligence for AI agents — not raw filings. Insider trading
-  patterns, earnings surprises and beat streaks, institutional ownership moves,
-  financial ratios with a proprietary composite value score, stock screening,
-  sector snapshots, macro signals, and cross-company anomaly detection. A
-  free-tier alternative to FactSet/Morningstar/S&P Capital IQ. Part of the
-  FoundryNet Data Network. Free tier then x402 (USDC on Solana).
+  Insider trading detection, earnings surprise analysis, institutional ownership changes, composite stock scoring, and macro indicators.
+icon: "📊"
+homepage: "https://foundrynet.io"
+repository: "https://github.com/FoundryNet/financial-signals-mcp"
+license: "MIT"
+categories:
+  - finance
+  - data
+  - research
+tags:
+  - stock-analysis
+  - insider-trading
+  - earnings
+  - financial-ratios
+  - market-intelligence
+  - sec-filings
+keywords:
+  - stock-analysis
+  - insider-trading
+  - earnings
+  - financial-ratios
+  - market-intelligence
+  - sec-filings
+attestation:
+  protocol: "MINT Protocol"
+  verified_outputs: true
+  live_feed: "https://mint.foundrynet.io/feed"
+network:
+  name: "FoundryNet Data Network"
+  servers: 17
 startCommand:
   type: http
   url: "https://financial-signals-mcp-production.up.railway.app/mcp"
