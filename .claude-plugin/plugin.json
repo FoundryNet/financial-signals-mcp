@@ -1,0 +1,9 @@
+{
+  "name": "foundrynet-financial-intelligence",
+  "version": "1.0.0",
+  "description": "Real-time market signals, insider-trading detection, earnings analysis, and composite stock scoring from the FoundryNet Data Network",
+  "author": { "name": "FoundryNet Labs", "url": "https://foundrynet.io" },
+  "homepage": "https://financial-signals-mcp-production.up.railway.app/mcp",
+  "license": "MIT",
+  "keywords": ["finance","insider-trading","earnings","stock-signals","market-intelligence"]
+}
