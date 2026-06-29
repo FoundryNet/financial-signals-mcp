@@ -22,6 +22,8 @@ import time
 from fastmcp import FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+import event_log
 
 import config
 import core
@@ -31,6 +33,7 @@ import identity
 import payment_gate
 import supa
 import tools
+import x402_standard
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("fin.mcp")
@@ -49,6 +52,21 @@ else:
     logger.info("pay-per-query INERT — all tools free")
 
 tools.register_all(mcp)
+
+
+# ── okf-reliability-v1: emit reliability metadata on every tool result (#2964) ──
+try:
+    from okf_middleware import ReliabilityMiddleware
+    mcp.add_middleware(ReliabilityMiddleware(server_id="financial-signals"))
+except Exception as _okf_e:  # noqa: BLE001
+    import logging as _okf_log; _okf_log.getLogger(__name__).warning(f"okf middleware not wired: {_okf_e}")
+
+
+@mcp.custom_route("/v1/reliability", methods=["GET"])
+async def _okf_reliability_route(request):
+    from starlette.responses import JSONResponse
+    import okf_endpoint
+    return JSONResponse(okf_endpoint.reliability_payload("financial-signals"))
 
 
 @mcp.custom_route("/health", methods=["GET"])
@@ -293,6 +311,54 @@ async def wellknown_mcp_json(request: Request) -> JSONResponse:
     }, headers={"Cache-Control": "public, max-age=300"})
 
 
+# ── Standard x402 compliance (discoverable on x402scan / 402 Index / CDP Bazaar) ──
+# Probeable HTTP endpoints returning the standard x402 schema, pointing at the same
+# Solana wallet our custom rail settles to. Additive — payment_gate is untouched.
+@mcp.custom_route("/x402", methods=["GET"])
+async def x402_index(request: Request) -> JSONResponse:
+    """Discovery index: every paid resource on this server (HTTP 200)."""
+    return JSONResponse(x402_standard.index(),
+                        headers={"Cache-Control": "public, max-age=300",
+                                 "Access-Control-Allow-Origin": "*"})
+
+
+@mcp.custom_route("/.well-known/x402", methods=["GET"])
+async def x402_wellknown(request: Request) -> JSONResponse:
+    """Well-known discovery doc for x402 crawlers/validators (HTTP 200)."""
+    return JSONResponse(x402_standard.index(),
+                        headers={"Cache-Control": "public, max-age=300",
+                                 "Access-Control-Allow-Origin": "*"})
+
+
+@mcp.custom_route("/x402/{tool}", methods=["GET", "POST"])
+async def x402_resource(request: Request) -> JSONResponse:
+    """Standard x402 'payment required' for one paid tool. Returns HTTP 402 with
+    the spec schema (what the directories probe). A future standard-payer retry
+    carrying a payment header is verified natively via payment_gate (self-settle)."""
+    tool = request.path_params["tool"]
+    if tool not in x402_standard.PAID_TOOLS:
+        return JSONResponse({"error": "unknown_resource", "tool": tool,
+                             "available": list(x402_standard.PAID_TOOLS)}, status_code=404)
+    challenge = x402_standard.payment_required_header(tool)
+    return JSONResponse(x402_standard.payment_required(tool), status_code=402,
+                        headers={"Cache-Control": "public, max-age=300",
+                                 "Access-Control-Allow-Origin": "*",
+                                 # Canonical v2 challenge carrier — validators key off this header.
+                                 "PAYMENT-REQUIRED": challenge,
+                                 "X-PAYMENT": challenge,  # v1 alias for legacy probes
+                                 "Link": '</openapi.json>; rel="describedby"',
+                                 "WWW-Authenticate": f'x402 version="2"'})
+
+
+@mcp.custom_route("/openapi.json", methods=["GET"])
+async def openapi_doc(request: Request) -> JSONResponse:
+    """OpenAPI 3.1 discovery doc — x402scan requires a spec at a discoverable URL."""
+    return JSONResponse(x402_standard.openapi(),
+                        headers={"Cache-Control": "public, max-age=300",
+                                 "Access-Control-Allow-Origin": "*",
+                                 "Link": '</openapi.json>; rel="describedby"'})
+
+
 def build_dual_app():
     main_app = mcp.http_app(transport="http", path="/mcp")
     sse_app = mcp.http_app(transport="sse", path="/sse")
@@ -315,6 +381,8 @@ def build_dual_app():
                         with contextlib.suppress(Exception):
                             await t
     main_app.router.lifespan_context = _dual_lifespan
+    # Per-call telemetry middleware (fire-and-forget to agents ingest).
+    main_app.add_middleware(BaseHTTPMiddleware, dispatch=event_log.middleware)
     return main_app
 
 
