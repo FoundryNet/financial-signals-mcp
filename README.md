@@ -5,8 +5,8 @@ server.** Six of those already exist. This serves the *interpreted* layer: the
 patterns, surprises, flows, scores, and anomalies an agent actually needs to make
 a decision. Raw data is commodity; **interpreted signals are premium**.
 
-> Part of the **FoundryNet Data Network**. Attest your agent's financial analysis
-> with [MINT Protocol](https://mint-mcp-production.up.railway.app/mcp). See also:
+> Part of the **FoundryNet Data Network**. Every output carries verifiable
+> provenance. See also:
 > **gov-contracts-mcp**, **brand-intel-mcp**, **patent-intel-mcp**.
 >
 > Built as a **free-tier alternative to enterprise financial data** (FactSet,
@@ -41,11 +41,13 @@ claude mcp add --transport http financial-signals https://financial-signals-mcp-
 | `macro_dashboard` | **free** | Macro indicators with trend + historical percentile — the gateway |
 | `company_profile` | $0.01 | Full blended profile + value score + sector positioning |
 | `anomaly_alert` | $0.02 | Unusual patterns across all monitored companies (premium) |
-| `mint_info` | **free** | FoundryNet Data Network + MINT Protocol |
+| `daily_brief` | $25 | Curated daily brief: top insider/earnings/institutional/value-score movers + macro |
+| `brief_summary` | $0.50 | Top 5 signals from today's brief as structured JSON (cheap sample of `daily_brief`) |
+| `mint_info` | **free** | FoundryNet Data Network + provenance details |
 
 **Free tier:** 25 paid-tool queries/day per agent (plus free `macro_dashboard` +
-`mint_info`). Then x402: the tool returns an HTTP-402 with a Solana USDC payment
-memo — pay it, re-call with the same args plus `payment_tx=<signature>`. An
+`mint_info`). Then the tool returns an HTTP-402 with a metered payment challenge —
+pay it, re-call with the same args plus `payment_tx=<reference>`. An
 `Authorization: Bearer fnet_…` key bypasses the paywall.
 
 ## The moat: composite_value_score
@@ -70,9 +72,9 @@ as a capital-efficiency proxy). Coverage grows as the daily universe is processe
 
 part of the **FoundryNet Data Network**.
 
-Built by [FoundryNet](https://foundrynet.io) · hello@foundrynet.io
+Built by [FoundryNet](https://foundrynet.io?utm_source=github&utm_medium=readme&utm_campaign=financial-signals-mcp) · forge@foundrynet.io
 
 ## Live network activity
 
 **Live feed:** [mint.foundrynet.io/feed](https://mint.foundrynet.io/feed)  
-Real-time verified work across 21 servers and autonomous agents, anchored on Solana via [MINT Protocol](https://mint.foundrynet.io).
+Real-time verified work across 17 servers and autonomous agents, with cryptographic provenance.
