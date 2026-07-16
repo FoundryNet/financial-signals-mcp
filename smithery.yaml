@@ -25,8 +25,8 @@ keywords:
   - market-intelligence
   - sec-filings
 attestation:
-  protocol: "MINT Protocol"
   verified_outputs: true
+  provenance: "cryptographic"
   live_feed: "https://mint.foundrynet.io/feed"
 network:
   name: "FoundryNet Data Network"
@@ -41,4 +41,4 @@ startCommand:
       api_key:
         type: string
         title: "Forge billing key (optional)"
-        description: "fnet_ key to bypass the per-query x402 paywall and bill to a Forge account."
+        description: "fnet_ key to bypass the per-query paywall and bill to a Forge account."

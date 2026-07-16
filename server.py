@@ -76,7 +76,7 @@ async def health(request: Request) -> JSONResponse:
         "network": "FoundryNet Data Network",
         "tools": ["insider_activity", "earnings_check", "institutional_moves", "screen_stocks",
                   "sector_snapshot", "macro_dashboard", "company_profile", "anomaly_alert",
-                  "daily_brief", "mint_info"],
+                  "daily_brief", "brief_summary", "mint_info"],
         "dataset": "supabase:financial_signals" if supa.configured() else "unconfigured",
         "fred_key": "set" if config.FRED_API_KEY else "unset",
         "x402_enabled": config.X402_ENABLED,
@@ -201,8 +201,8 @@ _TAGLINE = "Derived financial intelligence — insider, earnings, institutional 
 _DESC = ("Derived financial intelligence for agents: insider trading patterns, earnings "
          "surprises, institutional ownership moves, financial ratios with a proprietary "
          "value score, macro signals, and anomaly detection. A free-tier alternative to "
-         "FactSet/Morningstar/Capital IQ. Part of the FoundryNet Data Network — attest "
-         "analysis with MINT Protocol; see also gov-contracts-mcp, brand-intel-mcp, patent-intel-mcp.")
+         "FactSet/Morningstar/Capital IQ. Part of the FoundryNet Data Network with "
+         "verifiable provenance; see also gov-contracts-mcp, brand-intel-mcp, patent-intel-mcp.")
 _KEYWORDS = ["financial data", "stock screening", "insider trading", "earnings analysis",
              "institutional ownership", "financial ratios", "market intelligence", "alternative data"]
 
@@ -215,16 +215,16 @@ _AGENT_CARD = {
     "version": "1.0.0",
     "capabilities": {"tools": ["insider_activity", "earnings_check", "institutional_moves",
                                "screen_stocks", "sector_snapshot", "macro_dashboard",
-                               "company_profile", "anomaly_alert", "daily_brief", "mint_info"]},
+                               "company_profile", "anomaly_alert", "daily_brief", "brief_summary",
+                               "mint_info"]},
     "provider": {"name": "FoundryNet", "url": "https://foundrynet.io"},
     "network": "FoundryNet Data Network",
-    "attestation": {"protocol": "MINT Protocol",
-                    "endpoint": "https://mint-mcp-production.up.railway.app/mcp",
-                    "verified_outputs": True, "live_feed": "https://mint.foundrynet.io/feed", "feed_api": "https://mint-mcp-production.up.railway.app/v1/feed"},
-    "protocols": {"mcp": {"endpoint": config.PUBLIC_MCP_URL, "transport": "streamable-http", "tools_count": 10},
-                  "x402": {"supported": True, "currency": "USDC", "network": "solana"}},
-    "see_also": config.SISTER_SERVERS, "mint_protocol": config.MINT_MCP_URL,
-    "contact": "hello@foundrynet.io",
+    "attestation": {"provenance": "cryptographic",
+                    "verified_outputs": True, "live_feed": "https://mint.foundrynet.io/feed"},
+    "protocols": {"mcp": {"endpoint": config.PUBLIC_MCP_URL, "transport": "streamable-http", "tools_count": 11},
+                  "x402": {"supported": True}},
+    "see_also": config.SISTER_SERVERS,
+    "contact": "forge@foundrynet.io",
 }
 
 
@@ -255,7 +255,7 @@ async def server_card(request: Request) -> JSONResponse:
         "serverInfo": {"name": "Financial Signals MCP", "version": "1.0.0"},
         "authentication": {"type": "http", "scheme": "bearer",
                            "description": ("macro_dashboard and mint_info are free; other tools give 25 "
-                                           "free queries/day then take an fnet_ Bearer key OR x402 USDC.")},
+                                           "free queries/day then take an fnet_ Bearer key OR a metered per-query payment.")},
         "tools": live, "version": "1.0", "name": "Financial Signals MCP",
         "tagline": _TAGLINE, "description": _DESC,
         "serverUrl": config.PUBLIC_MCP_URL, "transport": "streamable-http",
@@ -265,7 +265,7 @@ async def server_card(request: Request) -> JSONResponse:
         "see_also": config.SISTER_SERVERS,
         "pricing": {"model": "metered",
                     "free_tier": f"{config.FREE_TIER_DAILY} queries/day + free macro_dashboard",
-                    "paid_from": f"{config.PRICE_INSIDER} USDC per query (x402)"},
+                    "paid_from": f"${config.PRICE_INSIDER} per query (metered)"},
     }, headers={"Cache-Control": "public, max-age=300"})
 
 
@@ -304,7 +304,7 @@ async def wellknown_mcp_json(request: Request) -> JSONResponse:
         "tools": names,
         "pricing": {"model": "per-query", "free_tier": True,
                     "paid_tools": [n for n in names if n not in _FREE_TOOL_NAMES]},
-        "attestation": {"enabled": True, "protocol": "MINT Protocol",
+        "attestation": {"enabled": True, "provenance": "cryptographic",
                         "feed": "https://mint.foundrynet.io/feed"},
         "network": {"name": "FoundryNet Data Network", "servers": 17,
                     "homepage": "https://foundrynet.io"},

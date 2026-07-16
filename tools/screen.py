@@ -24,8 +24,8 @@ def register(mcp) -> None:
         SEC filings and market data. Sorting by value score is YOUR proprietary
         stock-analysis ranking.
 
-        PAID: $0.01 USDC per query after the daily free allowance (25/day). On a
-        402, pay the returned Solana memo and re-call with the SAME args plus
+        PAID: $0.01 per query after the daily free allowance (25/day). On a
+        402, pay the returned payment challenge and re-call with the SAME args plus
         payment_tx=<signature>. An Authorization: Bearer fnet_ key bypasses it.
 
         Args:
@@ -37,7 +37,7 @@ def register(mcp) -> None:
             sort_by: value_score | market_cap | pe | dividend_yield | revenue_growth.
             limit: max rows (1-200, default 50).
             agent_id: stable id for your agent (scopes the free-tier counter).
-            payment_tx: Solana tx signature, when re-calling after a 402.
+            payment_tx: payment transaction reference, when re-calling after a 402.
         """
         filters = {"sector": sector, "min_market_cap": min_market_cap, "max_pe": max_pe,
                    "min_dividend_yield": min_dividend_yield, "min_value_score": min_value_score,

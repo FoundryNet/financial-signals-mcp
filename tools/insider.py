@@ -19,8 +19,8 @@ def register(mcp) -> None:
         before earnings"), large_buy, ceo_buy, and pre_earnings — the premium tool
         for "show me unusual insider selling before earnings".
 
-        PAID: $0.01 USDC per query after a daily free allowance (25/day). On a 402,
-        pay the returned Solana memo and re-call with the SAME args plus
+        PAID: $0.01 per query after a daily free allowance (25/day). On a 402,
+        pay the returned payment challenge and re-call with the SAME args plus
         payment_tx=<signature>. agent_id scopes your allowance; an Authorization:
         Bearer fnet_ key bypasses it.
 
@@ -29,7 +29,7 @@ def register(mcp) -> None:
             days_back: only transactions in the last N days.
             signal_type: cluster_sell | large_buy | ceo_buy | pre_earnings.
             agent_id: stable id for your agent (scopes the free-tier counter).
-            payment_tx: Solana tx signature, when re-calling after a 402.
+            payment_tx: payment transaction reference, when re-calling after a 402.
         """
         return await core.do_insider(ticker, days_back, signal_type,
                                      agent_key=identity.resolve_agent_key(agent_id),

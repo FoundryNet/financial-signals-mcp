@@ -22,8 +22,8 @@ claude mcp add --transport http foundrynet-financial https://financial-signals-m
 - `daily_brief` ($25) — Curated daily market intelligence, MINT-attested
 - `mint_info` (free) — Network + attestation info
 
-A daily free-tier allowance precedes the paywall; paid tools settle in USDC on
-Solana (x402) **or** Stripe. An `Authorization: Bearer fnet_…` key bypasses the gate.
+A daily free-tier allowance precedes the paywall; paid tools are metered (pay-per-query)
+or settle via Stripe. An `Authorization: Bearer fnet_…` key bypasses the gate.
 
 ## Part of the FoundryNet Data Network
 17 interconnected data-intelligence servers with MINT-attested, verifiable outputs.
